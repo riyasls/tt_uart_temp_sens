@@ -27,8 +27,13 @@ module tb ();
   wire VGND = 1'b0;
 `endif
 
+  reg [10:0] no_of_clks;
+  reg [31:0] i;
+  reg [31:0] j;
+
+
   // Replace tt_um_example with your module name:
-  tt_um_example user_project (
+  tt_um_uart_temp_sens user_project (
 
       // Include power ports for the Gate Level test:
 `ifdef GL_TEST
@@ -45,5 +50,53 @@ module tb ();
       .clk    (clk),      // clock
       .rst_n  (rst_n)     // not reset
   );
+
+  //assign ui_in[7:1] = 7'b0;
+
+  // 50 MHz clock frequency
+  // Clock period = 20ns
+  initial
+    begin
+      clk = 1'b0;
+      forever #10 clk = ~ clk;
+    end
+
+  // Initial start of simulation
+  initial
+    begin
+      rst_n = 1'b0;
+      no_of_clks = 1'b0;
+      i = 31'b0;
+      j = 31'b0;
+      ui_in[7:0] = 8'b0;
+      repeat (5) @(posedge clk);
+      rst_n = 1'b1;
+
+      @(posedge clk) ui_in[0] = 1'b1;
+
+      repeat (5) @(posedge clk);
+
+      for ( i = 0; i < 1000 ; i = i + 1 )
+        begin
+
+          no_of_clks = $random;
+
+          for ( j = 0; j < no_of_clks ; j = j + 1 )
+            begin
+              @(posedge clk) ui_in[0] = 1'b0;
+
+            end
+
+          @(posedge clk) ui_in[0] = 1'b1;
+          repeat (25) @(posedge clk);
+          @(posedge clk) ui_in[0] = 1'b0;
+
+        end
+
+      #1000;
+      $stop;
+
+    end
+
 
 endmodule
