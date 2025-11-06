@@ -23,7 +23,7 @@ module uart_temp
    );
 
   // Unit delay for simulation purpose only.
-  localparam           = 1;
+localparam unit_delay = 1;
 
   // no_of_clock_count width
   localparam  COUNTER_WIDTH = 32;
