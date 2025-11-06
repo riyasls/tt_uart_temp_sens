@@ -23,7 +23,7 @@ module uart_temp
    );
 
   // Unit delay for simulation purpose only.
-  localparam  UD            = 1;
+  localparam           = 1;
 
   // no_of_clock_count width
   localparam  COUNTER_WIDTH = 32;
@@ -74,11 +74,11 @@ module uart_temp
     begin
       if ( ~ reset_n )
         begin
-          pwm_in_data_f1 <=#UD 1'b0;
+          pwm_in_data_f1 <= 1'b0;
         end
       else
         begin
-          pwm_in_data_f1 <=#UD pwm_in_data_i;
+          pwm_in_data_f1 <= pwm_in_data_i;
         end
     end
 
@@ -92,15 +92,15 @@ module uart_temp
     begin
       if ( ~ reset_n )
         begin
-          capture_signal_data <=#UD 1'b0;
+          capture_signal_data <= 1'b0;
         end
       else if ( uart_tx_en | ( pwm_in_data_i & capture_signal_data) )
         begin
-          capture_signal_data <=#UD 1'b0;
+          capture_signal_data <= 1'b0;
         end
       else if ( pwm_in_data_ne )
         begin
-          capture_signal_data <=#UD 1'b1;
+          capture_signal_data <= 1'b1;
         end
     end
 
@@ -108,11 +108,11 @@ module uart_temp
     begin
       if ( ~ reset_n )
         begin
-          data_captured_pl <=#UD 1'b0;
+          data_captured_pl <= 1'b0;
         end
       else
         begin
-          data_captured_pl <=#UD ( pwm_in_data_pe & capture_signal_data );
+          data_captured_pl <= ( pwm_in_data_pe & capture_signal_data );
         end
     end
 
@@ -121,15 +121,15 @@ module uart_temp
     begin
       if ( ~ reset_n )
         begin
-          no_of_clock_count <=#UD 'd0;
+          no_of_clock_count <= 'd0;
         end
       else if ( data_captured_pl | uart_tx_en )
         begin
-          no_of_clock_count <=#UD 'd0;
+          no_of_clock_count <= 'd0;
         end
       else if ( ( ( ~ pwm_in_data_f1 ) & capture_signal_data ) )
         begin
-          no_of_clock_count <=#UD no_of_clock_count + 'd1;
+          no_of_clock_count <= no_of_clock_count + 'd1;
         end
     end
 
@@ -138,15 +138,15 @@ module uart_temp
     begin
       if ( ~ reset_n )
         begin
-          store_no_of_clock_count <=#UD 'd0;
+          store_no_of_clock_count <= 'd0;
         end
       else if ( data_captured_pl )
         begin
-          store_no_of_clock_count <=#UD no_of_clock_count;
+          store_no_of_clock_count <= no_of_clock_count;
         end
       else
         begin
-          store_no_of_clock_count <=#UD store_no_of_clock_count;
+          store_no_of_clock_count <= store_no_of_clock_count;
         end
     end
 
@@ -155,11 +155,11 @@ module uart_temp
     begin
       if ( ~ reset_n )
         begin
-          prepare_tx_data_pl <=#UD 1'b0;
+          prepare_tx_data_pl <= 1'b0;
         end
       else
         begin
-          prepare_tx_data_pl <=#UD data_captured_pl;
+          prepare_tx_data_pl <= data_captured_pl;
         end
     end
 
@@ -169,11 +169,11 @@ module uart_temp
     begin
       if ( ~ reset_n )
         begin
-          prepare_tx_data_pl_f1 <=#UD 1'b0;
+          prepare_tx_data_pl_f1 <= 1'b0;
         end
       else
         begin
-          prepare_tx_data_pl_f1 <=#UD prepare_tx_data_pl;
+          prepare_tx_data_pl_f1 <= prepare_tx_data_pl;
         end
     end
 
@@ -183,15 +183,15 @@ module uart_temp
     begin
       if ( ~ reset_n )
         begin
-          uart_tx_en <=#UD 1'b0;
+          uart_tx_en <= 1'b0;
         end
       else if ( ( bit_count == ( TOTAL_NO_BITS - 'd1 ) ) & uart_bit_transmitted_pl )
         begin
-          uart_tx_en <=#UD 1'b0;
+          uart_tx_en <= 1'b0;
         end
       else if ( prepare_tx_data_pl )
         begin
-          uart_tx_en <=#UD 1'b1;
+          uart_tx_en <= 1'b1;
         end
     end
 
@@ -201,19 +201,19 @@ module uart_temp
     begin
       if ( ~reset_n )
         begin
-          mp_counter <=#UD 9'd0;
+          mp_counter <= 9'd0;
         end
       else if ( mp_counter == ( CLKS_PER_BIT - 9'd1 ) )
         begin
-          mp_counter <=#UD 9'd0;
+          mp_counter <= 9'd0;
         end
       else if ( uart_tx_en )
         begin
-          mp_counter <=#UD mp_counter + 9'd1;
+          mp_counter <= mp_counter + 9'd1;
         end
       else
         begin
-          mp_counter <=#UD 9'd0;
+          mp_counter <= 9'd0;
         end
     end
 
@@ -227,22 +227,22 @@ module uart_temp
     begin
       if ( ~reset_n )
         begin
-          uart_tx_data  <=#UD 'd0;
-          uart_tx_o     <=#UD 1'b1;
+          uart_tx_data  <= 'd0;
+          uart_tx_o     <= 1'b1;
         end
       else if ( prepare_tx_data_pl )
         begin
                                 // Stop bit   CRLF             Data            Start bit
-          uart_tx_data  <=#UD ( {  1'b1,   CRLF_BYTE,  store_no_of_clock_count,   1'b0 } );
+          uart_tx_data  <= ( {  1'b1,   CRLF_BYTE,  store_no_of_clock_count,   1'b0 } );
         end
       else if ( uart_tx_en & ( bit_count != ( TOTAL_NO_BITS - 'd1 ) ) & ( prepare_tx_data_pl_f1 | uart_bit_transmitted_pl ) )
         begin
-          uart_tx_data  <=#UD ( { 1'b0, uart_tx_data[ ( TOTAL_NO_BITS - 1 ) : 1] } );
-          uart_tx_o     <=#UD uart_tx_data[0];
+          uart_tx_data  <= ( { 1'b0, uart_tx_data[ ( TOTAL_NO_BITS - 1 ) : 1] } );
+          uart_tx_o     <= uart_tx_data[0];
         end
       else if ( ~ uart_tx_en )
         begin
-          uart_tx_o     <=#UD 1'b1;
+          uart_tx_o     <= 1'b1;
         end
     end
 
@@ -251,15 +251,15 @@ module uart_temp
     begin
       if ( ~reset_n )
         begin
-          bit_count <=#UD 'd0;
+          bit_count <= 'd0;
         end
       else if ( ( bit_count == ( TOTAL_NO_BITS - 'd1 ) ) & uart_bit_transmitted_pl )
         begin
-          bit_count <=#UD 'd0;
+          bit_count <= 'd0;
         end
       else if ( uart_bit_transmitted_pl )
         begin
-          bit_count <=#UD bit_count + 'd1;
+          bit_count <= bit_count + 'd1;
         end
     end
 
