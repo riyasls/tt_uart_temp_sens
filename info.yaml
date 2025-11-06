@@ -4,7 +4,7 @@ project:
   author:       "riyasls"
   description:  "This project implements a convert a pwm digital serial signal to a parallel value and transmits it over UART (Tx) at the configured baud rate."
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
-  clock_hz:     20Hz      # Clock frequency in Hz (or 0 if not applicable)
+  clock_hz:     20      # Clock frequency in Hz (or 0 if not applicable)
 
   # How many tiles your design occupies? A single tile is about 167x108 uM.
   tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
