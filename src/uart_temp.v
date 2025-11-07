@@ -1,14 +1,15 @@
-//-----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------
 // @   Copyright (c) 2025, System Level Solutions (India) Pvt. Ltd.       @
 // @                     All rights reserved.                             @
 //
-//-----------------------------------------------------------------------------
-//-F I L E D E T A I L S-------------------------------------------------------
-// Description  : This module is used to convert the PWM digital serial signal
-//                in the parallel output and then transmit that value via the
-//                UART tx pin using the 115200 baud rate.
+//-------------------------------------------------------------------------------
+//-F I L E D E T A I L S---------------------------------------------------------
+// Description  : This module is used to count the low period of the PWM digital
+//                serial signal. Then that value will be transmitted via the
+//                UART tx pin using the 115200 baud rate. Here we have used the
+//                50MHz clock cycle.
 //
-//-----------------------------------------------------------------------------
+//-------------------------------------------------------------------------------
 
 `timescale 1ns/100ps
 
@@ -135,18 +136,18 @@ module uart_temp
       else if ( ( ( ~ pwm_in_data_f1 ) & capture_signal_data ) )
         begin
           // initialize carry
-          carry = 10'd0;
+          carry <= 10'd0;
 
           // ----- Least significant digit -----
           if (no_of_clock_count_in_bcd[3:0] == 4'd9)
             begin
               no_of_clock_count_in_bcd[3:0] <= 4'd0;
-              carry[0] = 1'b1;
+              carry[0] <= 1'b1;
             end
           else
             begin
               no_of_clock_count_in_bcd[3:0] <= no_of_clock_count_in_bcd[3:0] + 4'd1;
-              carry[0] = 1'b0;
+              carry[0] <= 1'b0;
             end
 
           // ----- Ripple carry through next digits -----
@@ -157,12 +158,12 @@ module uart_temp
                   if (no_of_clock_count_in_bcd[i*4 +: 4] == 4'd9)
                     begin
                       no_of_clock_count_in_bcd[i*4 +: 4] <= 4'd0;
-                      carry[i] = 1'b1;
+                      carry[i] <= 1'b1;
                     end
                   else
                     begin
                       no_of_clock_count_in_bcd[i*4 +: 4] <= no_of_clock_count_in_bcd[i*4 +: 4] + 4'd1;
-                      carry[i] = 1'b0;
+                      carry[i] <= 1'b0;
                     end
                 end
             end
