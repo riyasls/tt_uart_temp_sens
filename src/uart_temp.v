@@ -23,7 +23,7 @@ module uart_temp
 
    );
 
-  // no_of_clock_count_in_bcd width
+  // no_of_clock_count width
   localparam  COUNTER_WIDTH = 32;
 
   // Set localparam CLKS_PER_BIT as follows:
@@ -42,34 +42,29 @@ module uart_temp
   // are 13 for Carriage Return (\(CR\), \r) and 10 for Line Feed (\(LF\), \n)
   localparam  CRLF_BYTE_WITH_START_STOP_BITS = {1'b1, 8'h0A, 1'b0, 1'b1, 8'h0D, 1'b0};
 
-  // 20 bit crlf + 100 bit data (32 bit hex to Decimal)
-  // with start / stop bit for all bytes
-  localparam  TOTAL_NO_BITS = 20 + 100;
-  //localparam  TOTAL_NO_BITS = 16 + ( COUNTER_WIDTH * 2 ) + ( ( COUNTER_WIDTH/2 ) + 4 );
+  // 16 bit crlf + 64 bit data + 20 start / stop bit for all bytes
+  localparam  TOTAL_NO_BITS = 16 + ( COUNTER_WIDTH * 2 ) + ( ( COUNTER_WIDTH/2 ) + 4 );
 
   // Data width for the bit count
   localparam  BIT_COUNT_WIDTH = $clog2 ( TOTAL_NO_BITS );
 
-  //reg [ ( ( ( COUNTER_WIDTH * 2 ) + 16 ) - 1 ) :0] store_no_of_clock_count_in_bcd_to_ascii;
-  reg [ ( BIT_COUNT_WIDTH - 1 ) :0] bit_count;
-  reg [ ( TOTAL_NO_BITS - 1 ) :0]   uart_tx_data;
-  reg [ 99:0]                       store_no_of_clock_count_in_bcd_to_ascii;
-  reg [ 39:0]                       no_of_clock_count_in_bcd;
-  reg [ 39:0]                       store_no_of_clock_count_in_bcd;
-  reg [ 9:0]                        carry;
-  reg [ 8:0]                        mp_counter;
-  reg                               prepare_tx_data_pl;
-  reg                               prepare_tx_data_pl_f1;
-  reg                               prepare_tx_data_pl_f2;
-  reg                               uart_tx_en;
-  reg                               pwm_in_data_f1;
-  reg                               capture_signal_data;
-  reg                               data_captured_pl;
-  reg                               uart_data_transmission;
-  wire                              pwm_in_data_ne;
-  wire                              uart_bit_transmitted_pl;
-  wire                              pwm_in_data_pe;
-  integer                           i;
+  reg [ ( ( ( COUNTER_WIDTH * 2 ) + 16 ) - 1 ) :0] store_no_of_clock_count_ascii;
+  reg [ ( BIT_COUNT_WIDTH - 1 ) :0]                bit_count;
+  reg [ ( COUNTER_WIDTH - 1 ) :0]                  no_of_clock_count;
+  reg [ ( COUNTER_WIDTH - 1 ) :0]                  store_no_of_clock_count;
+  reg [ ( TOTAL_NO_BITS - 1 ) :0]                  uart_tx_data;
+  reg [ 8:0]                                       mp_counter;
+  reg                                              prepare_tx_data_pl;
+  reg                                              prepare_tx_data_pl_f1;
+  reg                                              prepare_tx_data_pl_f2;
+  reg                                              uart_tx_en;
+  reg                                              pwm_in_data_f1;
+  reg                                              capture_signal_data;
+  reg                                              data_captured_pl;
+  reg                                              uart_data_transmission;
+  wire                                             pwm_in_data_ne;
+  wire                                             uart_bit_transmitted_pl;
+  wire                                             pwm_in_data_pe;
 
   // Simple flop
   always @ ( posedge clk or negedge reset_n )
@@ -121,55 +116,196 @@ module uart_temp
         end
     end
 
-
   // Count the number of clk cycle between two pulses
-  always @(posedge clk or negedge reset_n)
+  always @ ( posedge clk or negedge reset_n )
     begin
-      if (!reset_n)
+      if ( ~ reset_n )
         begin
-          no_of_clock_count_in_bcd <= 40'd0;
+          no_of_clock_count <= 'd0;
         end
       else if ( data_captured_pl | uart_tx_en )
         begin
-          no_of_clock_count_in_bcd <= 'd0;
+          no_of_clock_count <= 'd0;
         end
       else if ( ( ( ~ pwm_in_data_f1 ) & capture_signal_data ) )
         begin
-          // initialize carry
-          carry <= 10'd0;
-
-          // ----- Least significant digit -----
-          if (no_of_clock_count_in_bcd[3:0] == 4'd9)
-            begin
-              no_of_clock_count_in_bcd[3:0] <= 4'd0;
-              carry[0] <= 1'b1;
-            end
-          else
-            begin
-              no_of_clock_count_in_bcd[3:0] <= no_of_clock_count_in_bcd[3:0] + 4'd1;
-              carry[0] <= 1'b0;
-            end
-
-          // ----- Ripple carry through next digits -----
-          for (i = 1; i < 10; i = i + 1)
-            begin
-              if (carry[i-1])
-                begin
-                  if (no_of_clock_count_in_bcd[i*4 +: 4] == 4'd9)
-                    begin
-                      no_of_clock_count_in_bcd[i*4 +: 4] <= 4'd0;
-                      carry[i] <= 1'b1;
-                    end
-                  else
-                    begin
-                      no_of_clock_count_in_bcd[i*4 +: 4] <= no_of_clock_count_in_bcd[i*4 +: 4] + 4'd1;
-                      carry[i] <= 1'b0;
-                    end
-                end
-            end
+          no_of_clock_count <= no_of_clock_count + 'd1;
         end
     end
 
+  // Store the no_of_clock_count value
+  always @ ( posedge clk or negedge reset_n )
+    begin
+      if ( ~ reset_n )
+        begin
+          store_no_of_clock_count <= 'd0;
+        end
+      else if ( data_captured_pl )
+        begin
+          store_no_of_clock_count <= no_of_clock_count;
+        end
+      else
+        begin
+          store_no_of_clock_count <= store_no_of_clock_count;
+        end
+    end
+
+  // Simple flop
+  always @ ( posedge clk or negedge reset_n )
+    begin
+      if ( ~ reset_n )
+        begin
+          prepare_tx_data_pl <= 1'b0;
+        end
+      else
+        begin
+          prepare_tx_data_pl <= data_captured_pl;
+        end
+    end
+
+
+  // Simple flop
+  always @ ( posedge clk or negedge reset_n )
+    begin
+      if ( ~ reset_n )
+        begin
+          prepare_tx_data_pl_f1 <= 1'b0;
+          prepare_tx_data_pl_f2 <= 1'b0;
+        end
+      else
+        begin
+          prepare_tx_data_pl_f1 <= prepare_tx_data_pl;
+          prepare_tx_data_pl_f2 <= prepare_tx_data_pl_f1;
+        end
+    end
+
+
+  // UART Transmission Enable
+  always @ ( posedge clk or negedge reset_n )
+    begin
+      if ( ~ reset_n )
+        begin
+          uart_tx_en <= 1'b0;
+        end
+      else if ( ( bit_count == ( TOTAL_NO_BITS - 'd1 ) ) & uart_bit_transmitted_pl )
+        begin
+          uart_tx_en <= 1'b0;
+        end
+      else if ( prepare_tx_data_pl )
+        begin
+          uart_tx_en <= 1'b1;
+        end
+    end
+
+
+  // Multipurpose counter
+  always @ ( posedge clk or negedge reset_n )
+    begin
+      if ( ~reset_n )
+        begin
+          mp_counter <= 9'd0;
+        end
+      else if ( mp_counter == ( CLKS_PER_BIT - 9'd1 ) )
+        begin
+          mp_counter <= 9'd0;
+        end
+      else if ( uart_data_transmission )
+        begin
+          mp_counter <= mp_counter + 9'd1;
+        end
+      else
+        begin
+          mp_counter <= 9'd0;
+        end
+    end
+
+
+  // UART data transmission start
+  always @ ( posedge clk or negedge reset_n )
+    begin
+      if ( ~reset_n )
+        begin
+          uart_data_transmission <= 1'b0;
+        end
+      else if ( ( bit_count == ( TOTAL_NO_BITS - 'd1 ) ) & uart_bit_transmitted_pl )
+        begin
+          uart_data_transmission <= 1'b0;
+        end
+      else if ( prepare_tx_data_pl_f2 )
+        begin
+          uart_data_transmission <= 1'b1;
+        end
+    end
+
+
+  // Bit is transmitted on the UART pin
+  assign uart_bit_transmitted_pl = ( mp_counter == ( CLKS_PER_BIT - 'd1 ) );
+
+  // Prepare the TX data
+  always @ ( posedge clk or negedge reset_n )
+    begin
+      if ( ~reset_n )
+        begin
+          uart_tx_data  <= 'd0;
+          uart_tx_o     <= 1'b1;
+        end
+      else if ( prepare_tx_data_pl_f1 )
+        begin
+          //   CRLF with Start stop bit      ASCII data with Start stop bit
+          uart_tx_data  <= ( { CRLF_BYTE_WITH_START_STOP_BITS,  store_no_of_clock_count_ascii } );
+        end
+      else if ( uart_tx_en & ( bit_count != ( TOTAL_NO_BITS - 'd1 ) ) & ( prepare_tx_data_pl_f2 | uart_bit_transmitted_pl ) )
+        begin
+          uart_tx_data  <= ( { 1'b0, uart_tx_data[ ( TOTAL_NO_BITS - 1 ) : 1] } );
+          uart_tx_o     <= uart_tx_data[0];
+        end
+      else if ( ~ uart_tx_en )
+        begin
+          uart_tx_o     <= 1'b1;
+        end
+    end
+
+  // ASCII Value generation
+  // Then Swap the value with the LSB ASCII value to MSB ASCII value
+  // Due to UART print.
+  // Also Added the Start and stop bit for all the bytes
+  always @(posedge clk or negedge reset_n)
+    begin
+      if ( ~reset_n )
+        begin
+          store_no_of_clock_count_ascii <= 80'b0;
+        end
+      else if ( prepare_tx_data_pl )
+        begin
+          store_no_of_clock_count_ascii[79:70]  <= (store_no_of_clock_count[ 3: 0] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[ 3: 0], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[ 3: 0] - 8'd10 ), 1'b0} );
+          store_no_of_clock_count_ascii[69:60]  <= (store_no_of_clock_count[ 7: 4] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[ 7: 4], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[ 7: 4] - 8'd10 ), 1'b0} );
+          store_no_of_clock_count_ascii[59:50]  <= (store_no_of_clock_count[11: 8] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[11: 8], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[11: 8] - 8'd10 ), 1'b0} );
+          store_no_of_clock_count_ascii[49:40]  <= (store_no_of_clock_count[15:12] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[15:12], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[15:12] - 8'd10 ), 1'b0} );
+          store_no_of_clock_count_ascii[39:30]  <= (store_no_of_clock_count[19:16] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[19:16], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[19:16] - 8'd10 ), 1'b0} );
+          store_no_of_clock_count_ascii[29:20]  <= (store_no_of_clock_count[23:20] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[23:20], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[23:20] - 8'd10 ), 1'b0} );
+          store_no_of_clock_count_ascii[19:10]  <= (store_no_of_clock_count[27:24] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[27:24], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[27:24] - 8'd10 ), 1'b0} );
+          store_no_of_clock_count_ascii[ 9: 0]  <= (store_no_of_clock_count[31:28] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[31:28], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[31:28] - 8'd10 ), 1'b0} );
+        end
+    end
+
+  // Bit counter
+  always @ ( posedge clk or negedge reset_n )
+    begin
+      if ( ~reset_n )
+        begin
+          bit_count <= 7'd0;
+        end
+      else if ( ( bit_count == ( TOTAL_NO_BITS - 'd1 ) ) & uart_bit_transmitted_pl )
+        begin
+          bit_count <= 7'd0;
+        end
+      else if ( uart_bit_transmitted_pl )
+        begin
+          bit_count <= bit_count + 7'd1;
+        end
+    end
+
+endmodule
 
   // Store the no_of_clock_count_in_bcd value
   always @ ( posedge clk or negedge reset_n )
