@@ -65,32 +65,32 @@ module tb ();
   // Initial start of simulation
   initial
     begin
-      reset_n = '0;
+      rst_n = '0;
       no_of_clks = '0;
       i = '0;
       j = '0;
-      pwm_in_data_i = '0;
+      ui_in = '0;
       repeat (5) @(posedge clk);
-      reset_n = '1;
+      rst_n = '1;
 
-      @(posedge clk) pwm_in_data_i = '1;
+      @(posedge clk) ui_in[0]  = '1;
 
       repeat (5) @(posedge clk);
 
-      for ( i = 0; i < 1000 ; i = i + 1 )
+      for ( i = 0; i < 100; i = i + 1 )
         begin
 
           no_of_clks = $random;
 
           for ( j = 0; j < no_of_clks ; j = j + 1 )
             begin
-              pwm_in_data_i = '0;
+              ui_in[0]  = '0;
               @(posedge clk);
             end
 
-          @(posedge clk) pwm_in_data_i = '1;
+          @(posedge clk) ui_in[0]  = '1;
           repeat (25) @(posedge clk);
-          //@(posedge clk) pwm_in_data_i = '0;
+          //@(posedge clk) ui_in[0]  = '0;
 
         end
 
