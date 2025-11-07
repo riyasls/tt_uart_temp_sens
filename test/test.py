@@ -4,10 +4,11 @@
 #
 # -----------------------------------------------------------------------------
 # - F I L E  D E T A I L S ----------------------------------------------------
-# Description  : Cocotb testbench for tt_um_pwm_to_uart_tx_wrapper.
-#                This module converts the PWM digital serial signal
-#                into a parallel value and transmits it over UART TX
-#                using a 115200 baud rate.
+# Description  : Cocotb testbench equivalent of the Verilog tb.v
+#                This testbench drives the UART temperature sensor design
+#                (tt_um_uart_temp_sens) with a simulated PWM input signal.
+#                The module measures PWM low periods and transmits the result
+#                via UART TX at 115200 baud, using a 50 MHz clock.
 # -----------------------------------------------------------------------------
 
 import random
@@ -15,51 +16,79 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer
 
+
 @cocotb.test()
-async def pwm_to_uart_tx_test(dut):
-    """Testbench equivalent tt_um_uart_temp_sens"""
+async def tb_test(dut):
+    """Cocotb testbench equivalent of Verilog tb module."""
 
-    # Create 50 MHz clock (period = 20 ns)
-    cocotb.start_soon(Clock(dut.clk, 20, units="ns").start())
-
+    # -------------------------------------------------------------------------
     # Initialize signals
-    dut.reset_n.value = 0
-    dut.pwm_in_data_i.value = 0
-    dut._log.info("Resetting DUT...")
+    # -------------------------------------------------------------------------
+    dut._log.info("Initializing testbench signals...")
 
-    # Wait for a few clock cycles
+    # Set all input signals to default values
+    dut.clk.value = 0
+    dut.rst_n.value = 0
+    dut.ena.value = 0
+    dut.ui_in.value = 0
+    dut.uio_in.value = 0
+
+    # Optional power pins (ignored in RTL sim)
+    if hasattr(dut, "VPWR"):
+        dut.VPWR.value = 1
+    if hasattr(dut, "VGND"):
+        dut.VGND.value = 0
+
+    # -------------------------------------------------------------------------
+    # Start clock: 50 MHz -> 20 ns period
+    # -------------------------------------------------------------------------
+    cocotb.start_soon(Clock(dut.clk, 20, units="ns").start())
+    dut._log.info("50 MHz clock started.")
+
+    # -------------------------------------------------------------------------
+    # Reset sequence
+    # -------------------------------------------------------------------------
     for _ in range(5):
         await RisingEdge(dut.clk)
+    dut.rst_n.value = 1
+    dut._log.info("Reset released.")
 
-    # Release reset
-    dut.reset_n.value = 1
-    dut._log.info("Released reset.")
-
-    # Drive PWM input
+    # Enable design after reset
+    dut.ena.value = 1
     await RisingEdge(dut.clk)
-    dut.pwm_in_data_i.value = 1
 
-    # Wait for a few more cycles
+    # -------------------------------------------------------------------------
+    # PWM Input simulation
+    # -------------------------------------------------------------------------
+    # We'll assume pwm_in_data_i is mapped to one of the input pins
+    # For example: ui_in[0] = pwm input
+    # Modify this line if your DUT connects it differently.
+    pwm_bit_index = 0
+
+    # Make PWM high initially
+    dut.ui_in.value = dut.ui_in.value | (1 << pwm_bit_index)
+
+    # Wait a few cycles before starting
     for _ in range(5):
         await RisingEdge(dut.clk)
 
-    # Main loop (equivalent to 'for (i = 0; i < 1000; i++)')
+    # Main loop (equivalent to Verilog for(i = 0; i < 1000; i++))
     for i in range(1000):
+        no_of_clks = random.randint(0, 2047)  # Equivalent to $random & 0x7FF
+        dut._log.debug(f"[{i}] PWM LOW for {no_of_clks} cycles")
 
-        # Random number of low cycles (equivalent to 'no_of_clks = $random')
-        no_of_clks = random.randint(0, 2047)  # 11-bit like in Verilog
-        dut._log.debug(f"Iteration {i}, Low period = {no_of_clks} cycles")
-
-        # Keep PWM low for 'no_of_clks' cycles
+        # Drive PWM low for 'no_of_clks' cycles
         for _ in range(no_of_clks):
-            dut.pwm_in_data_i.value = 0
+            dut.ui_in.value = dut.ui_in.value & ~(1 << pwm_bit_index)  # set bit low
             await RisingEdge(dut.clk)
 
-        # Make PWM high for 25 cycles
-        dut.pwm_in_data_i.value = 1
+        # Drive PWM high for 25 cycles
+        dut.ui_in.value = dut.ui_in.value | (1 << pwm_bit_index)
         for _ in range(25):
             await RisingEdge(dut.clk)
 
-    # Simulation end delay
-    await Timer(100_000, units="ns")
+    # -------------------------------------------------------------------------
+    # End of simulation
+    # -------------------------------------------------------------------------
+    await Timer(1000, units="ns")
     dut._log.info("Simulation complete.")
