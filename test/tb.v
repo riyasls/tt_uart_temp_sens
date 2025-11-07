@@ -1,57 +1,35 @@
-`default_nettype none
-`timescale 1ns / 1ps
+//-----------------------------------------------------------------------------
+// @   Copyright (c) 2025, System Level Solutions (India) Pvt. Ltd.       @
+// @                     All rights reserved.                             @
+//
+//-----------------------------------------------------------------------------
+//-F I L E D E T A I L S-------------------------------------------------------
+// Description  : This module is used to convert the PWM digital serial signal
+//                in the parallel output and then transmit that value via the
+//                UART tx pin using the 115200 baud rate.
+//
+//-----------------------------------------------------------------------------
 
-/* This testbench just instantiates the module and makes some convenient wires
-   that can be driven / tested by the cocotb test.py.
-*/
-module tb ();
+`timescale 1ns/100ps
 
-  // Dump the signals to a VCD file. You can view it with gtkwave or surfer.
-  initial begin
-    $dumpfile("tb.vcd");
-    $dumpvars(0, tb);
-    #1;
-  end
+module tb;
 
-  // Wire up the inputs and outputs:
-  reg clk;
-  reg rst_n;
-  reg ena;
-  reg [7:0] ui_in;
-  reg [7:0] uio_in;
-  wire [7:0] uo_out;
-  wire [7:0] uio_out;
-  wire [7:0] uio_oe;
-`ifdef GL_TEST
-  wire VPWR = 1'b1;
-  wire VGND = 1'b0;
-`endif
-
+  reg    clk;
+  reg    reset_n;
+  reg    pwm_in_data_i;
+  wire   uart_tx_o;
   reg [10:0] no_of_clks;
   reg [31:0] i;
   reg [31:0] j;
 
-
-  // Replace tt_um_example with your module name:
-  tt_um_uart_temp_sens user_project (
-
-      // Include power ports for the Gate Level test:
-`ifdef GL_TEST
-      .VPWR(VPWR),
-      .VGND(VGND),
-`endif
-
-      .ui_in  (ui_in),    // Dedicated inputs
-      .uo_out (uo_out),   // Dedicated outputs
-      .uio_in (uio_in),   // IOs: Input path
-      .uio_out(uio_out),  // IOs: Output path
-      .uio_oe (uio_oe),   // IOs: Enable path (active high: 0=input, 1=output)
-      .ena    (ena),      // enable - goes high when design is selected
-      .clk    (clk),      // clock
-      .rst_n  (rst_n)     // not reset
-  );
-
-  //assign ui_in[7:1] = 7'b0;
+  tt_um_uart_temp_sens
+    tuptutw
+      (
+       .clk           (clk          ),
+       .reset_n       (reset_n      ),
+       .pwm_in_data_i (pwm_in_data_i),
+       .uart_tx_o     (uart_tx_o    )
+       );
 
   // 50 MHz clock frequency
   // Clock period = 20ns
@@ -64,15 +42,15 @@ module tb ();
   // Initial start of simulation
   initial
     begin
-      rst_n = 1'b0;
-      no_of_clks = 1'b0;
-      i = 31'b0;
-      j = 31'b0;
-      ui_in[7:0] = 8'b0;
+      reset_n = '0;
+      no_of_clks = '0;
+      i = '0;
+      j = '0;
+      pwm_in_data_i = '0;
       repeat (5) @(posedge clk);
-      rst_n = 1'b1;
+      reset_n = '1;
 
-      @(posedge clk) ui_in[0] = 1'b1;
+      @(posedge clk) pwm_in_data_i = '1;
 
       repeat (5) @(posedge clk);
 
@@ -83,17 +61,17 @@ module tb ();
 
           for ( j = 0; j < no_of_clks ; j = j + 1 )
             begin
-              @(posedge clk) ui_in[0] = 1'b0;
-
+              pwm_in_data_i = '0;
+              @(posedge clk);
             end
 
-          @(posedge clk) ui_in[0] = 1'b1;
+          @(posedge clk) pwm_in_data_i = '1;
           repeat (25) @(posedge clk);
-          @(posedge clk) ui_in[0] = 1'b0;
+          //@(posedge clk) pwm_in_data_i = '0;
 
         end
 
-      #1000;
+      #100000;
       $stop;
 
     end
