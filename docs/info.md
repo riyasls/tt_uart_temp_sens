@@ -28,6 +28,8 @@ The module samples a 1-Bit pwm input and converts the serial pwm waveform into a
 
  ## Dependenices
 => This design instantiates one submodule: Uart_Temp
+<img width="347" height="430" alt="image" src="https://github.com/user-attachments/assets/b225b374-1e7d-4104-b232-f7423b161e48" />
+
 
 
 ## How to test
