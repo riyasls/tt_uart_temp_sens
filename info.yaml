@@ -23,8 +23,8 @@ project:
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
 pinout:
   # Inputs
-  ui[0]: ""
-  ui[1]: "pwm input for uart module"
+  ui[0]: "pwm input for uart module"
+  ui[1]: ""
   ui[2]: ""
   ui[3]: ""
   ui[4]: ""
@@ -33,8 +33,8 @@ pinout:
   ui[7]: ""
 
   # Outputs
-  uo[0]: ""
-  uo[1]: "UART TX output"
+  uo[0]: "UART TX output""
+  uo[1]: ""
   uo[2]: ""
   uo[3]: ""
   uo[4]: ""
