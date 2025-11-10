@@ -37,7 +37,7 @@ Stop Bits: 1,
 Flow Control: None,
 The design operates with a clock frequency of 50 MHz.The values that shown on the serial terminal is in the Hexadecimal form. The low time period = ( 1/clock frequency ) * (counter value shown in the serial terminal in decimal).
 
-<img width="1838" height="977" alt="testbench" src="https://github.com/user-attachments/assets/911a49fd-5079-4230-b323-6e3544f49f81" />
+
 
 
 ## External hardware
