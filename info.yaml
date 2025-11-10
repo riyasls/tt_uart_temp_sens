@@ -34,7 +34,7 @@ pinout:
 
   # Outputs
   uo[0]: ""
-  uo[1]: "UART TX output""
+  uo[1]: "UART TX output"
   uo[2]: ""
   uo[3]: ""
   uo[4]: ""
