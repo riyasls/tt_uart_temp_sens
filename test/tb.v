@@ -73,7 +73,7 @@ module tb ();
       repeat (5) @(posedge clk);
       rst_n = '1;
 
-       @(posedge clk) ui_in[1]  = '1;
+       @(posedge clk) ui_in[0]  = '1;
 
       repeat (5) @(posedge clk);
 
@@ -84,13 +84,13 @@ module tb ();
 
           for ( j = 0; j < no_of_clks ; j = j + 1 )
             begin
-               ui_in[1]  = '0;
+               ui_in[0]  = '0;
               @(posedge clk);
             end
 
-           @(posedge clk) ui_in[1]  = '1;
+           @(posedge clk) ui_in[0]  = '1;
           repeat (25) @(posedge clk);
-           //@(posedge clk) ui_in[1]  = '0;
+           //@(posedge clk) ui_in[0]  = '0;
 
         end
 
