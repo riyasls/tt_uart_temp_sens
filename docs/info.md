@@ -19,6 +19,8 @@ The module samples a 1-Bit pwm input and converts the serial pwm waveform into a
 => This design instantiates one submodule: Uart_Temp
 
 ## How to test
+<img width="1849" height="977" alt="testbench" src="https://github.com/user-attachments/assets/3bd676e8-3008-45e5-8342-65de0f088b10" />
+
 
 ## External hardware
 List external hardware used in your project (e.g. PMOD, LED display, etc), if any
