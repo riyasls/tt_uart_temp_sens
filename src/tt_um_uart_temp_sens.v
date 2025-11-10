@@ -32,7 +32,7 @@ module tt_um_uart_temp_sens (
       (
        .clk           (clk          ),
        .reset_n       (rst_n        ),
-       .pwm_in_data_i (ui_in[0]     ),
+          .pwm_in_data_i (ui_in[1]     ),
           .uart_tx_o    (uo_out[1]    )
        );
 
