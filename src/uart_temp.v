@@ -24,7 +24,7 @@ module uart_temp
    );
 
   // no_of_clock_count width
-  localparam  COUNTER_WIDTH = 24;
+  localparam  COUNTER_WIDTH = 16;
 
   // Set localparam CLKS_PER_BIT as follows:
   // CLKS_PER_BIT = (Frequency of clk)/(Frequency of UART)
@@ -48,7 +48,7 @@ module uart_temp
   // Data width for the bit count
   localparam  BIT_COUNT_WIDTH = $clog2 ( TOTAL_NO_BITS );
 
-  reg [ ( ( ( COUNTER_WIDTH * 2 ) + 12 ) - 1 ) :0] store_no_of_clock_count_ascii;
+  reg [ ( ( ( COUNTER_WIDTH * 2 ) + 8 ) - 1 ) :0]  store_no_of_clock_count_ascii;
   reg [ ( BIT_COUNT_WIDTH - 1 ) :0]                bit_count;
   reg [ ( COUNTER_WIDTH - 1 ) :0]                  no_of_clock_count;
   reg [ ( COUNTER_WIDTH - 1 ) :0]                  store_no_of_clock_count;
@@ -127,7 +127,7 @@ module uart_temp
         begin
           no_of_clock_count <= 'd0;
         end
-      else if ( no_of_clock_count == 24'hFF_FFFF )
+      else if ( no_of_clock_count == 16'hFFFF )
         begin
           no_of_clock_count <= no_of_clock_count;
         end
@@ -277,16 +277,14 @@ module uart_temp
     begin
       if ( ~reset_n )
         begin
-          store_no_of_clock_count_ascii <= 60'b0;
+          store_no_of_clock_count_ascii <= 40'b0;
         end
       else if ( prepare_tx_data_pl )
         begin
-          store_no_of_clock_count_ascii[59:50]  <= (store_no_of_clock_count[ 3: 0] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[ 3: 0], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[ 3: 0] - 8'd10 ), 1'b0} );
-          store_no_of_clock_count_ascii[49:40]  <= (store_no_of_clock_count[ 7: 4] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[ 7: 4], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[ 7: 4] - 8'd10 ), 1'b0} );
-          store_no_of_clock_count_ascii[39:30]  <= (store_no_of_clock_count[11: 8] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[11: 8], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[11: 8] - 8'd10 ), 1'b0} );
-          store_no_of_clock_count_ascii[29:20]  <= (store_no_of_clock_count[15:12] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[15:12], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[15:12] - 8'd10 ), 1'b0} );
-          store_no_of_clock_count_ascii[19:10]  <= (store_no_of_clock_count[19:16] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[19:16], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[19:16] - 8'd10 ), 1'b0} );
-          store_no_of_clock_count_ascii[ 9: 0]  <= (store_no_of_clock_count[23:20] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[23:20], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[23:20] - 8'd10 ), 1'b0} );
+          store_no_of_clock_count_ascii[39:30]  <= (store_no_of_clock_count[ 3: 0] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[ 3: 0], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[ 3: 0] - 8'd10 ), 1'b0} );
+          store_no_of_clock_count_ascii[29:20]  <= (store_no_of_clock_count[ 7: 4] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[ 7: 4], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[ 7: 4] - 8'd10 ), 1'b0} );
+          store_no_of_clock_count_ascii[19:10]  <= (store_no_of_clock_count[11: 8] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[11: 8], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[11: 8] - 8'd10 ), 1'b0} );
+          store_no_of_clock_count_ascii[ 9: 0]  <= (store_no_of_clock_count[15:12] < 8'd10) ? ( { 1'b1, 8'h30 + store_no_of_clock_count[15:12], 1'b0} ) : ({ 1'b1, 8'h41 + ( store_no_of_clock_count[15:12] - 8'd10 ), 1'b0} );
         end
     end
 
