@@ -13,24 +13,10 @@
 The module samples a 1-Bit pwm input and converts the serial pwm waveform into a parallel represntation. once the sample window completes , the uart transmitter serializes the parallel value and send it through the Tx pin using the configured baud rate. The top-level follows TinyTapeout I/O conventions(clk, rst_n, ena, ui_in, uo_out). UART(Tx) is available on uo_out[0].
 
 ## pinout summary
-+--------------+------------+-----------------+------------------------------------+
-| Pin          | Direction  | Name / Function | Description                        |
-+--------------+------------+-----------------+------------------------------------+
-| ui_in[0]     | Input      | pwm_in          | PWM input from temperature sensor  |
-| ui_out[0]    | Output     | UART_TX         | UART transmit output               |
-| ui_in[7:1]   | Input      | -               | Unused                             |
-| ui_out[7:1]  | Output     | -               | Unused                             |
-| uio_in[7:0]  | InOut      | -               | Not Used                           |
-| uio_out[7:0] | Output     | -               | Not Used                           |
-| uio_oe[7:0]  | Output     | -               | Not Used                           |
-+--------------+------------+-----------------+------------------------------------+
-
+<img width="768" height="345" alt="pin_out" src="https://github.com/user-attachments/assets/560d601c-1182-4d8e-a83b-27b00efe0733" />
 
  ## Dependenices
 => This design instantiates one submodule: Uart_Temp
-<img width="347" height="430" alt="image" src="https://github.com/user-attachments/assets/b225b374-1e7d-4104-b232-f7423b161e48" />
-
-
 
 ## How to test
 
